@@ -9,7 +9,9 @@ var Colors = {
 
 var scene,
 		camera, fieldOfView, aspectRatio, nearPlane, farPlane, HEIGHT, WIDTH,
-		renderer, container, cube;
+		renderer, container,
+		controls,
+		cube;
 
 window.addEventListener('load', init, false);
 function init () {
@@ -41,6 +43,9 @@ function createScene() {
 	camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
 
 	camera.position.z = 5;
+
+	controls = new THREE.OrbitControls(camera);
+  controls.addEventListener('change', render);
 
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(WIDTH, HEIGHT);
@@ -74,12 +79,23 @@ function handleWindowResize() {
 }
 
 function loop(){
-	cube.rotation.x += 0.1;
-  cube.rotation.y += 0.1;
+	//cube.rotation.x += 0.1;
+  //cube.rotation.y += 0.1;
 
 	// render the scene
-	renderer.render(scene, camera);
+	render();
 
 	// call the loop function again
 	requestAnimationFrame(loop);
+}
+
+function render() {
+	renderer.render(scene, camera);
+}
+
+function animate() {
+
+  requestAnimationFrame( animate );
+  controls.update();
+
 }
