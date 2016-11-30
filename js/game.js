@@ -9,7 +9,7 @@ var Colors = {
 
 var scene,
 		camera, fieldOfView, aspectRatio, nearPlane, farPlane, HEIGHT, WIDTH,
-		renderer, container;
+		renderer, container, cube;
 
 window.addEventListener('load', init, false);
 function init () {
@@ -17,12 +17,12 @@ function init () {
 	createScene();
 
 	// add the lights
-	createLights();
+	//createLights();
 
 	// add the objects
-	createPlane();
-	createSea();
-	createSky();
+	//createPlane();
+	//createSea();
+	//createSky();
 
 	// start a loop that will update the objects' positions
 	// and render the scene on each frame
@@ -40,27 +40,46 @@ function createScene() {
 
 	camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
 
+	camera.position.z = 5;
+
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(WIDTH, HEIGHT);
 	document.body.appendChild( renderer.domElement );
+	renderer.shadowMap.enabled = true;
+
+	// Add the DOM element of the renderer to the
+	// container we created in the HTML
+	container = document.getElementById('world');
+	container.appendChild(renderer.domElement);
+
+	// Listen to the screen: if the user resizes it
+	// we have to update the camera and the renderer size
+	window.addEventListener('resize', handleWindowResize, false);
+
+	var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+	var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+	cube = new THREE.Mesh( geometry, material );
+	scene.add( cube );
+
 }
 
 
+function handleWindowResize() {
+	// update height and width of the renderer and the camera
+	HEIGHT = window.innerHeight;
+	WIDTH = window.innerWidth;
+	renderer.setSize(WIDTH, HEIGHT);
+	camera.aspect = WIDTH / HEIGHT;
+	camera.updateProjectionMatrix();
+}
 
-var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-var cube = new THREE.Mesh( geometry, material );
-scene.add( cube );
-
-camera.position.z = 5;
-
-var render = function () {
-  requestAnimationFrame( render );
-
-  cube.rotation.x += 0.1;
+function loop(){
+	cube.rotation.x += 0.1;
   cube.rotation.y += 0.1;
 
-  renderer.render(scene, camera);
-};
+	// render the scene
+	renderer.render(scene, camera);
 
-render();
+	// call the loop function again
+	requestAnimationFrame(loop);
+}
