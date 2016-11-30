@@ -11,12 +11,15 @@ var scene,
 		camera, fieldOfView, aspectRatio, nearPlane, farPlane, HEIGHT, WIDTH,
 		renderer, container,
 		controls,
+		sunAngle,
 		cube;
 
 window.addEventListener('load', init, false);
 function init () {
 	// set up the scene, the camera and the renderer
 	createScene();
+	createBackground();
+	initObjects();
 
 	// add the lights
 	//createLights();
@@ -61,11 +64,26 @@ function createScene() {
 	// we have to update the camera and the renderer size
 	window.addEventListener('resize', handleWindowResize, false);
 
-	var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-	var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-	cube = new THREE.Mesh( geometry, material );
-	scene.add( cube );
 
+
+}
+
+function createBackground() {
+	var geometry  = new THREE.SphereGeometry(90, 32, 32);
+	// create the material, using a texture of startfield
+	var material  = new THREE.MeshBasicMaterial();
+	material.map   = THREE.ImageUtils.loadTexture('images/galaxy_starfield.png');
+	material.side  = THREE.BackSide;
+	// create the mesh based on geometry and material
+	var mesh  = new THREE.Mesh(geometry, material);
+	scene.add(mesh);
+}
+
+function initObjects() {
+	var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+	var material = new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true} );
+	cube = new THREE.Mesh(geometry, material );
+	scene.add(cube);
 }
 
 
