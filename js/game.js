@@ -10,16 +10,18 @@ var Colors = {
 var scene,
 		camera, fieldOfView, aspectRatio, nearPlane, farPlane, HEIGHT, WIDTH,
 		renderer, container,
-		controls,
-		sunAngle,
+		controls, keyboard,
+		starSphere,
 		cube;
 
 window.addEventListener('load', init, false);
+
 function init () {
 	// set up the scene, the camera and the renderer
 	createScene();
 	createBackground();
 	initObjects();
+	moveCube();
 
 	// add the lights
 	//createLights();
@@ -50,6 +52,8 @@ function createScene() {
 	controls = new THREE.OrbitControls(camera);
   controls.addEventListener('change', render);
 
+	keyboard	= new THREEx.KeyboardState();
+
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(WIDTH, HEIGHT);
 	document.body.appendChild( renderer.domElement );
@@ -63,20 +67,17 @@ function createScene() {
 	// Listen to the screen: if the user resizes it
 	// we have to update the camera and the renderer size
 	window.addEventListener('resize', handleWindowResize, false);
-
-
-
 }
 
 function createBackground() {
 	var geometry  = new THREE.SphereGeometry(90, 32, 32);
-	// create the material, using a texture of startfield
+	// create the material, using a texture of starfield
 	var material  = new THREE.MeshBasicMaterial();
 	material.map   = THREE.ImageUtils.loadTexture('images/galaxy_starfield.png');
 	material.side  = THREE.BackSide;
 	// create the mesh based on geometry and material
-	var mesh  = new THREE.Mesh(geometry, material);
-	scene.add(mesh);
+	starSphere  = new THREE.Mesh(geometry, material);
+	scene.add(starSphere);
 }
 
 function initObjects() {
@@ -86,6 +87,12 @@ function initObjects() {
 	scene.add(cube);
 }
 
+
+function moveCube() {
+	if (keyboard.pressed("S")) {
+		cube.position.y -= 0.1;
+	}
+}
 
 function handleWindowResize() {
 	// update height and width of the renderer and the camera
@@ -98,8 +105,8 @@ function handleWindowResize() {
 
 function loop(){
 	//cube.rotation.x += 0.1;
-  //cube.rotation.y += 0.1;
-
+  starSphere.rotation.y += 0.0005;
+  moveCube();
 	// render the scene
 	render();
 
@@ -112,8 +119,6 @@ function render() {
 }
 
 function animate() {
-
-  requestAnimationFrame( animate );
+  requestAnimationFrame(animate);
   controls.update();
-
 }
