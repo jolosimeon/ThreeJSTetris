@@ -101,6 +101,7 @@ function initObjects() {
 	boundingBox.position.y += GRID_Y/2 - 0.5;
 	boundingBox.position.x += GRID_X/2 - 0.5;
 	boundingBox.position.z += GRID_Z/2 - 0.5;
+	controls.target.copy(boundingBox.position)
 	scene2.add(boundingBox);
 
 	//var material = new THREE.MeshBasicMaterial( { color: 0x33333333, wireframe: true, transparent: true} );
