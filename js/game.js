@@ -12,7 +12,7 @@ var scene, scene2,
 		renderer, container,
 		controls, keyboard,
 		starSphere,
-		GRID_X, GRID_Y, GRID_Z,
+		GRID_X, GRID_Y, GRID_Z, SPAWN_X, SPAWN_Y, SPAWN_Z,
 		cube, geoCube, CUBE_SIDE,
 		stepTime, accTime, frameTime, lastFrameTime, clock,
 		gameOver, gamePause;
@@ -96,8 +96,13 @@ function initObjects() {
 
 	//Initialize grid size
 	GRID_X = 5;
-	GRID_Y = 8;
+	GRID_Y = 10;
 	GRID_Z = 5;
+
+	//Initialize spawn Point
+	SPAWN_X = Math.floor(GRID_X / 2);
+	SPAWN_Y = GRID_Y + 3;
+	SPAWN_Z = Math.floor(GRID_Z / 2);
 
 	//Initialize Time steps
 	clock = new THREE.Clock();
@@ -125,9 +130,9 @@ function makeGrid() {
 	var geo = new THREE.EdgesGeometry( geometry ); // or WireframeGeometry( geometry )
 	var mat = new THREE.LineBasicMaterial( { color: 0xdddddddd, linewidth: 6 } );
 	var boundingBox = new THREE.LineSegments( geo, mat );
-	boundingBox.position.y += GRID_Y/2 - 0.5;
-	boundingBox.position.x += GRID_X/2 - 0.5;
-	boundingBox.position.z += GRID_Z/2 - 0.5;
+	boundingBox.position.x += GRID_X / 2 - CUBE_SIDE / 2;
+	boundingBox.position.y += GRID_Y / 2 - CUBE_SIDE / 2;
+	boundingBox.position.z += GRID_Z / 2 - CUBE_SIDE / 2;
 	controls.target.copy(boundingBox.position)
 	scene2.add(boundingBox);
 
@@ -149,14 +154,30 @@ function makeGrid() {
 	}
 
 	var gridHelper = new THREE.GridHelper(5, GRID_X*GRID_Y, 0x0000ff, 0x808080 );
-	gridHelper.position.y -= 0.5;
+	gridHelper.position.y -= CUBE_SIDE / 2;
 	//scene.add( gridHelper );
 
-	var cubeMat = new THREE.MeshBasicMaterial( { color: 0x0000ff} );
-	cube = new THREE.Mesh(geoCube, cubeMat );
-	cube.position.y += GRID_Y + 3;
 
+
+	var cubeMat = new THREE.MeshBasicMaterial( { color: 0x0000ff} );
+
+	var matCube = new THREE.MeshBasicMaterial( {
+    color: 0xff0000,
+    polygonOffset: true,
+    polygonOffsetFactor: 1, // positive value pushes polygon further away
+    polygonOffsetUnits: 1
+	} );
+	cube = new THREE.Mesh(geoCube, matCube );
+	cube.position.x = SPAWN_X;
+	cube.position.y = SPAWN_Y;
+	cube.position.z = SPAWN_Z;
 	scene2.add(cube);
+	// wireframe
+	var newgeo = new THREE.EdgesGeometry(geoCube); // or WireframeGeometry
+	var newmat = new THREE.LineBasicMaterial( { color: 0x00000000, linewidth: 2 } );
+	var newwireframe = new THREE.LineSegments( newgeo, newmat );
+	cube.add( newwireframe );
+
 /*
 	cube1 = new THREE.Mesh(geometry, material );
 	cube1.position.x = 1;
@@ -191,7 +212,7 @@ function loop(){
   keypress();
 
 	while(accTime > stepTime) {
-    cube.position.y -= 1;
+    cube.position.y -= CUBE_SIDE;
   	accTime -= stepTime;
   }
 
