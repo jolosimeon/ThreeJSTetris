@@ -12,8 +12,10 @@ var scene, scene2,
 		renderer, container,
 		controls, keyboard,
 		starSphere,
-		GRID_X = 5, GRID_Y = 8, GRID_Z = 5,
-		cube, geoCube, CUBE_SIDE = 1;
+		GRID_X, GRID_Y, GRID_Z,
+		cube, geoCube, CUBE_SIDE,
+		stepTime, accTime, frameTime, lastFrameTime, clock,
+		gameOver, gamePause;
 
 var grid = new Array();
 
@@ -25,10 +27,6 @@ function init () {
 	createBackground();
 	initObjects();
 	makeGrid();
-
-
-	moveCube();
-
 	// add the lights
 	//createLights();
 
@@ -93,6 +91,35 @@ function createBackground() {
 }
 
 function initObjects() {
+	//Initialize block size
+	CUBE_SIDE = 1;
+
+	//Initialize grid size
+	GRID_X = 5;
+	GRID_Y = 8;
+	GRID_Z = 5;
+
+	//Initialize Time steps
+	clock = new THREE.Clock();
+	clock.start();
+	stepTime = 1000;
+	frameTime = 0;
+	accTime = 0;
+	lastFrameTime = Date.now();
+
+}
+
+
+function keypress() {
+	if (keyboard.pressed("S")) {
+		cube.position.y -= 0.1;
+	}
+	if (keyboard.pressed("H")) {
+		alert("hello world " + " X: " + camera.position.x + " Y: "+ camera.position.y + " Z: " + camera.position.z );
+	}
+}
+
+function makeGrid() {
 	geoCube = new THREE.BoxGeometry(CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
 	var geometry = new THREE.BoxGeometry(GRID_X, GRID_Y, GRID_Z);
 	var geo = new THREE.EdgesGeometry( geometry ); // or WireframeGeometry( geometry )
@@ -104,35 +131,8 @@ function initObjects() {
 	controls.target.copy(boundingBox.position)
 	scene2.add(boundingBox);
 
-	//var material = new THREE.MeshBasicMaterial( { color: 0x33333333, wireframe: true, transparent: true} );
-	//cube = new THREE.Mesh(geometry, material );
-
-
-
-	//scene.add(cube);
-/*
-	cube1 = new THREE.Mesh(geometry, material );
-	cube1.position.x = 1;
-	scene.add(cube1);
-
-	cube2 = new THREE.Mesh(geometry, material );
-	cube2.position.x = 2;
-	scene.add(cube2);*/
-}
-
-
-function moveCube() {
-	if (keyboard.pressed("S")) {
-		cube.position.y -= 0.1;
-	}
-	if (keyboard.pressed("H")) {
-		alert("hello world " + " X: " + camera.position.x + " Y: "+ camera.position.y + " Z: " + camera.position.z );
-	}
-}
-
-function makeGrid() {
-	var geo = new THREE.EdgesGeometry( geoCube ); // or WireframeGeometry( geometry )
-	var mat = new THREE.LineBasicMaterial( { color: 0x11111111, linewidth: 4 } );
+	geo = new THREE.EdgesGeometry( geoCube ); // or WireframeGeometry( geometry )
+	mat = new THREE.LineBasicMaterial( { color: 0x11111111, linewidth: 4 } );
 	var wireframe;
 
 	for (var i = 0; i < GRID_X; i++) {
@@ -147,6 +147,24 @@ function makeGrid() {
 			}
 		}
 	}
+
+	var gridHelper = new THREE.GridHelper(5, GRID_X*GRID_Y, 0x0000ff, 0x808080 );
+	gridHelper.position.y -= 0.5;
+	//scene.add( gridHelper );
+
+	var cubeMat = new THREE.MeshBasicMaterial( { color: 0x0000ff} );
+	cube = new THREE.Mesh(geoCube, cubeMat );
+	cube.position.y += GRID_Y + 3;
+
+	scene2.add(cube);
+/*
+	cube1 = new THREE.Mesh(geometry, material );
+	cube1.position.x = 1;
+	scene.add(cube1);
+
+	cube2 = new THREE.Mesh(geometry, material );
+	cube2.position.x = 2;
+	scene.add(cube2);*/
 }
 
 function handleWindowResize() {
@@ -159,15 +177,28 @@ function handleWindowResize() {
 }
 
 function loop(){
-	//cube.rotation.x += 0.1;
-  starSphere.rotation.y += 0.0003;
-  moveCube();
-	// render the scene
-	controls.update();
-	render();
-
-	// call the loop function again
 	requestAnimationFrame(loop);
+
+	var time = Date.now();
+	frameTime = time - lastFrameTime;
+  lastFrameTime = time;
+	accTime += frameTime;
+
+	//Ikot-ikot lang
+  starSphere.rotation.y += 0.0003;
+
+	//Pag may pinindot si koya
+  keypress();
+
+	while(accTime > stepTime) {
+    cube.position.y -= 1;
+  	accTime -= stepTime;
+  }
+
+	controls.update();
+
+	// render the scene
+	render();
 }
 
 function render() {
