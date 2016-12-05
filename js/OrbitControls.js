@@ -516,7 +516,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 	function handleKeyDown( event ) {
 
 		//console.log( 'handleKeyDown' );
-
+/*
 		switch ( event.keyCode ) {
 
 			case scope.keys.UP:
@@ -539,7 +539,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 				scope.update();
 				break;
 
-		}
+		}*/
 
 	}
 
