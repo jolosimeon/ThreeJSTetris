@@ -63,6 +63,11 @@ function BlockShape(type, shape, cubes, color, position) {
     }
   }
 
+  this.fall = function(y) {
+    cubes.position.y += y * constants.CUBE_SIDE;
+    position.y += y;
+  }
+
   this.checkWallCollision = function() {
     for (i = 0; i < shape.length; i++) {
   		if ((shape[i].x + position.x) < 0 ||
@@ -71,6 +76,9 @@ function BlockShape(type, shape, cubes, color, position) {
   				(shape[i].x + position.x) >= constants.GRID_X ||
   				(shape[i].z + position.z) >= constants.GRID_Z) {
   					return true;
+  		}
+      if (grid[shape[i].x +  position.x][shape[i].y +  position.y][shape[i].z +  position.z].state == STATE.FROZEN) {
+        return true;
   		}
     }
     return false;

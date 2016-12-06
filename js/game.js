@@ -21,7 +21,7 @@ var scene, scene2,
 		gameOver, gamePause,
 		currentScore;
 
-var grid = new Array();
+
 
 window.addEventListener('load', init, false);
 
@@ -33,7 +33,12 @@ function init () {
 	makeGrid();
 
 	generateRandomBlockShape();
-	addStaticBlock(0, 0, 0, Colors.pink);
+	for (var i = 0; i < grid.length-1; i++)
+		for (var j = 0; j < grid[0][0].length; j++)
+			addStaticBlock(i, 0, j, Colors.pink);
+	/*addStaticBlock(4, 0, 0, Colors.pink);
+	addStaticBlock(4, 0, 1, Colors.pink);
+	addStaticBlock(4, 0, 2, Colors.pink);*/
 	// add the lights
 	//createLights();
 
@@ -98,6 +103,10 @@ function createBackground() {
 	scene.add(starSphere);
 }
 
+function createLights() {
+
+}
+
 function initObjects() {
 	//Initialize block size
 	CUBE_SIDE = constants.CUBE_SIDE;
@@ -116,7 +125,7 @@ function initObjects() {
 	//Initialize Time steps
 	clock = new THREE.Clock();
 	clock.start();
-	stepTime = 1000;
+	stepTime = 750;
 	frameTime = 0;
 	accTime = 0;
 	lastFrameTime = Date.now();
@@ -195,7 +204,7 @@ function makeGrid() {
 				for (var k = 0; k < GRID_Z; k++) {
 					wireframe = null;
 					if (j < GRID_Y) {
-						wireframe = new THREE.LineSegments( geo, mat );
+						wireframe = new THREE.LineSegments( geo.clone(), mat.clone() );
 						wireframe.position.set(i, j, k);
 						scene.add( wireframe );
 					}
@@ -219,7 +228,7 @@ function handleWindowResize() {
 }
 
 function generateRandomBlockShape() {
-	var type = Math.floor(Math.random() * shapes.length);
+	var type = 2;//Math.floor(Math.random() * shapes.length);
 	var shape = [];
 	for (var  i = 0; i < shapes[type].length; i++) {
 		shape[i] = cloneVector(shapes[type][i]);
@@ -233,7 +242,7 @@ function generateRandomBlockShape() {
 		geometry.merge(tmpGeometry.geometry, tmpGeometry.matrix);
 	}
 
-	var matCube = new THREE.MeshBasicMaterial( {
+	var matCube = new THREE.MeshPhongMaterial( {
     color: BLOCK_COLORS[colorIndex],
     polygonOffset: true,
     polygonOffsetFactor: 1, // positive value pushes polygon further away
@@ -272,7 +281,7 @@ function cloneVector(v) {
 function addStaticBlock (x, y, z, blockColor) {
 	cleanRemove(scene, grid[x][y][z].cube);
 	var geometry = 	new THREE.BoxGeometry(CUBE_SIDE, CUBE_SIDE, CUBE_SIDE);
-	var matCube = new THREE.MeshBasicMaterial( {
+	var matCube = new THREE.MeshPhongMaterial( {
     color: blockColor,
     polygonOffset: true,
     polygonOffsetFactor: 1, // positive value pushes polygon further away
@@ -289,7 +298,7 @@ function addStaticBlock (x, y, z, blockColor) {
 	cube.rotation = {x: 0, y: 0, z: 0};
 
 	scene2.add(cube);
-	grid[x][y][z].cubes = cube;
+	grid[x][y][z].cube = cube;
 	grid[x][y][z].state = STATE.FROZEN;
 }
 
@@ -307,33 +316,112 @@ function freeze(movingShape) {
   }
 }
 
-function checkCollision () {
+function checkCollision() {
 	var shape = movingShape.shape;
 	var posX = movingShape.position.x;
 	var posY = movingShape.position.y;
 	var posZ = movingShape.position.z;
 	for (i = 0; i < shape.length; i++) {
-		//alert(shape[i].y + posY - 1);
-		if (grid[shape[i].x + posX][shape[i].y + posY - 1][shape[i].z + posZ].state == STATE.FROZEN) {
+		//console.log(shape[i].y + posY);
+		if ((shape[i].y + posY) <= 0) {
 			return true;
 		}
 
-		if ((shape[i].y + posY) <= 0) {
+		if (grid[shape[i].x + posX][shape[i].y + posY - 1][shape[i].z + posZ].state == STATE.FROZEN) {
 			return true;
 		}
 	}
 	return false;
 }
 
+function checkGameOver() {
+	var shape = movingShape.shape;
+	var posX = movingShape.position.x;
+	var posY = movingShape.position.y;
+	var posZ = movingShape.position.z;
+	for (i = 0; i < shape.length; i++) {
+		if ((shape[i].y + posY) >= GRID_Y) {
+			gameOver = true;
+		}
+	}
+}
+
+function checkComplete() {
+
+	var x, y, z, refresh = false;
+	//for each row
+	for (var j = 0; j < GRID_Y; j++) {
+		var total = grid.length * grid[0][0].length;
+		var sum = 0;
+		for (var i = 0; i < grid.length; i++) {
+				for (var k = 0; k < grid[0][0].length; k++) {
+					if (grid[i][j][k].state == STATE.FROZEN)
+						sum++;
+				}
+		}
+		if (j == 0)
+			console.log(sum + ", " + total);
+		//if row is full
+			if (sum == total) {
+				//move dem down
+				for (y = j; y < GRID_Y-1; y++) {
+					console.log("watsp");
+					for (x = 0; x < grid.length; x++) {
+						for (z = 0; z < grid[0][0].length; z++) {
+							if (y == j) {
+								if (grid[x][y][z].state == STATE.FROZEN) {
+									cleanRemove(scene2, grid[x][y][z].cube);
+								}
+								else {
+									cleanRemove(scene, grid[x][y][z].cube);
+								}
+							}
+							grid[x][y+1][z].cube.position.y -= 1;
+							grid[x][y][z] = grid[x][y+1][z];
+							console.log(grid[x][y][z].cube.position.y);
+						}
+					}
+				}
+					//refresh = true;
+				console.log("hallooooo");
+				//top layer
+				y = GRID_Y - 1;
+				var geo = new THREE.EdgesGeometry( geoCube.clone()); // or WireframeGeometry( geometry )
+				var mat = new THREE.LineBasicMaterial( { color: 0x11111111, linewidth: 4 } );
+				var wireframe;
+				for (x = 0; x < grid.length; x++) {
+					for (z = 0; z < grid[0][0].length; z++) {
+						/*if (grid[x][y][z].state == STATE.FROZEN) {
+							cleanRemove(scene2, grid[x][y][z].cube);
+						}
+						else {
+							cleanRemove(scene, grid[x][y][z].cube);
+						}*/
+						wireframe = new THREE.LineSegments( geo, mat );
+						wireframe.position.set(x, y, z);
+						scene.add( wireframe );
+						grid[x][y][z] = new Block(x, y, z, wireframe);
+					}
+				}
+			}
+		}
+}
+
 function hitBottom() {
-	freeze(movingShape);
-	cleanRemove(scene2, movingShape.cubes);
-	generateRandomBlockShape();
+	checkGameOver();
+	if (!gameOver) {
+		freeze(movingShape);
+		cleanRemove(scene2, movingShape.cubes);
+		checkComplete();
+		generateRandomBlockShape();
+	}
 }
 
 function loop(){
 	requestAnimationFrame(loop);
 	keyboard.update();
+
+	var delta = clock.getDelta();
 
 	var time = Date.now();
 	frameTime = time - lastFrameTime;
@@ -344,25 +432,27 @@ function loop(){
   starSphere.rotation.y += 0.0003;
 
 	//Pag may pinindot si koya
-  keypress();
+	if (!gameOver) {
+	  keypress();
 
-	while (accTime > stepTime) {
-  	accTime -= stepTime;
-		movingShape.translate(0, -1, 0);
+		while (accTime > stepTime) {
+	  	accTime -= stepTime;
+			movingShape.fall(-1);
 
-		if (movingShape.position.y == 0) {
-			hitBottom();
-		}
-		else if (checkCollision()) {
-			hitBottom();
-		}
-  }
-
-
-
+			if (movingShape.position.y == 0) {
+				hitBottom();
+			}
+			else if (checkCollision()) {
+				hitBottom();
+			}
+	  }
+	}
 	controls.update();
 	stats.update();
 	render();
+
+
+
 }
 
 function render() {

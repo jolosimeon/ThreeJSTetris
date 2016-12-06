@@ -48,3 +48,5 @@ var shapes = [
         {x: 1, y: 2, z: 0}
     ]
 ];
+
+var grid = new Array();
