@@ -6,9 +6,12 @@ function BlockShape(type, shape, cubes, color, position) {
   this.position = position;
 
   this.rotate = function(x, y, z) {
+    var initialcubes = this.cubes;
     cubes.rotation.x += x * Math.PI / 180;
     cubes.rotation.y += y * Math.PI / 180;
     cubes.rotation.z += z * Math.PI / 180;
+
+    //new TWEEN.Tween( initialcubes.rotation ).to( cubes.rotation, 1000 ).easing(TWEEN.Easing.Elastic.InOut).start();
 
     var rotationMatrix = new THREE.Matrix4();
     rotationMatrix.makeRotationFromEuler(cubes.rotation);

@@ -19,7 +19,7 @@ var scene, scene2,
 		cube, geoCube, CUBE_SIDE, movingShape,
 		stepTime, accTime, frameTime, lastFrameTime, clock, collision,
 		gameOver, gamePause,
-		currentScore;
+		currentScore, scoreText, linesCompleted;
 
 
 
@@ -33,14 +33,14 @@ function init () {
 	makeGrid();
 
 	generateRandomBlockShape();
-	for (var i = 0; i < grid.length-1; i++)
+	/*for (var i = 0; i < grid.length-1; i++)
 		for (var j = 0; j < grid[0][0].length; j++)
-			addStaticBlock(i, 0, j, Colors.pink);
-	/*addStaticBlock(4, 0, 0, Colors.pink);
-	addStaticBlock(4, 0, 1, Colors.pink);
-	addStaticBlock(4, 0, 2, Colors.pink);*/
+			addStaticBlock(i, 0, j, BLOCK_COLORS[5]);
+	addStaticBlock(4, 0, 0, BLOCK_COLORS[5]);
+	addStaticBlock(4, 0, 1, BLOCK_COLORS[5]);
+	addStaticBlock(4, 0, 2, BLOCK_COLORS[5]);*/
 	// add the lights
-	//createLights();
+	createLights();
 
 	// add the objects
 	//createPlane();
@@ -71,7 +71,7 @@ function createScene() {
   //controls.addEventListener('change', render);
 	controls.enableDamping = true;
 	controls.dampingFactor = 0.4;
-	controls.maxDistance = 20;
+	controls.maxDistance = 10;
 
 	keyboard	= new KeyboardState();
 
@@ -104,7 +104,21 @@ function createBackground() {
 }
 
 function createLights() {
-
+	var light = new THREE.PointLight(0xffffff, 1, 100);
+	light.position.set(0, GRID_Y+1, 0);
+	scene2.add(light);
+	var sideLight1 = new THREE.PointLight(0xffffff, 1, 10);
+	sideLight1.position.set(Math.floor(GRID_X/2), Math.floor(GRID_Y/2), -7);
+	scene2.add(sideLight1);
+	var sideLight2 = new THREE.PointLight(0xffffff, 1, 10);
+	sideLight2.position.set(Math.floor(GRID_X/2), Math.floor(GRID_Y/2), 7);
+	scene2.add(sideLight2);
+	var sideLight3 = new THREE.PointLight(0xffffff, 1, 10);
+	sideLight3.position.set(7, Math.floor(GRID_Y/2), Math.floor(GRID_Z/2));
+	scene2.add(sideLight3);
+	var sideLight4 = new THREE.PointLight(0xffffff, 1, 10);
+	sideLight4.position.set(-7, Math.floor(GRID_Y/2), Math.floor(GRID_Z/2));
+	scene2.add(sideLight4);
 }
 
 function initObjects() {
@@ -125,12 +139,13 @@ function initObjects() {
 	//Initialize Time steps
 	clock = new THREE.Clock();
 	clock.start();
-	stepTime = 750;
+	stepTime = 500;
 	frameTime = 0;
 	accTime = 0;
 	lastFrameTime = Date.now();
 
 	currentScore = 0;
+	linesCompleted = 0;
 	gameOver = false;
 	gamePause = false;
 	colorIndex = 0;
@@ -138,6 +153,18 @@ function initObjects() {
 	stats = new Stats();
 	stats.showPanel( 0 ); // 0: fps, 1: ms, 2: mb, 3+: custom
 	document.body.appendChild( stats.dom );
+
+	scoreText = document.createElement('div');
+	scoreText.style.position = 'absolute';
+	//text2.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
+	scoreText.style.width = 250;
+	scoreText.style.height = 150;
+	scoreText.style.color = "white";
+	scoreText.id = "score";
+	scoreText.style.bottom = 0 + 'px';
+	scoreText.style.left = 150 + 'px';
+	refreshScore();
+	container.appendChild(scoreText);
 
 }
 
@@ -191,7 +218,7 @@ function makeGrid() {
 	boundingBox.position.y += GRID_Y / 2 - CUBE_SIDE / 2;
 	boundingBox.position.z += GRID_Z / 2 - CUBE_SIDE / 2;
 	controls.target.copy(boundingBox.position)
-	scene2.add(boundingBox);
+	//scene2.add(boundingBox);
 
 	geo = new THREE.EdgesGeometry( geoCube.clone()); // or WireframeGeometry( geometry )
 	mat = new THREE.LineBasicMaterial( { color: 0x11111111, linewidth: 4 } );
@@ -228,7 +255,7 @@ function handleWindowResize() {
 }
 
 function generateRandomBlockShape() {
-	var type = 2;//Math.floor(Math.random() * shapes.length);
+	var type = Math.floor(Math.random() * shapes.length);
 	var shape = [];
 	for (var  i = 0; i < shapes[type].length; i++) {
 		shape[i] = cloneVector(shapes[type][i]);
@@ -342,6 +369,14 @@ function checkGameOver() {
 	for (i = 0; i < shape.length; i++) {
 		if ((shape[i].y + posY) >= GRID_Y) {
 			gameOver = true;
+		/*	var gameOverText = document.createElement('div');
+			gameOverText.style.position = 'absolute';
+			//text2.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
+			gameOverText.style.color = "red";
+			gameOverText.innerHTML = "GAME OVER";
+			gameOverText.id = "gameover";
+		//	gameOverText.style.center = 0 + 'px';
+			container.appendChild(gameOverText);*/
 		}
 	}
 }
@@ -363,6 +398,9 @@ function checkComplete() {
 			console.log(sum + ", " + total);
 		//if row is full
 			if (sum == total) {
+				linesCompleted++;
+				currentScore += 100;
+				refreshScore();
 				//move dem down
 				for (y = j; y < GRID_Y-1; y++) {
 					console.log("watsp");
@@ -411,10 +449,16 @@ function hitBottom() {
 	checkGameOver();
 	if (!gameOver) {
 		freeze(movingShape);
+		currentScore += 10;
+		refreshScore();
 		cleanRemove(scene2, movingShape.cubes);
 		checkComplete();
 		generateRandomBlockShape();
 	}
+}
+
+function refreshScore() {
+	scoreText.innerHTML = "SCORE: " + currentScore + " <br/>LINES: " + linesCompleted;
 }
 
 function loop(){
